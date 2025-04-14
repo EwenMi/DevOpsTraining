@@ -1,0 +1,52 @@
+name: Deploy Infra + App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+      ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+      ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
+      ARM_TENANT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🧰 Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: 🔧 Init Terraform
+        run: terraform -chdir=terraform init
+
+      - name: 📆 Plan
+        run: terraform -chdir=terraform plan
+
+      - name: 🚀 Apply
+        run: terraform -chdir=terraform apply -auto-approve
+
+      - name: 📤 Get public IP
+        id: tf_output
+        run: |
+          IP=$(terraform -chdir=terraform output -raw public_ip)
+          echo "VM_IP=$IP" >> $GITHUB_ENV
+
+      - name: 🔑 Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
+
+      - name: 📦 Install Ansible
+        run: sudo apt update && sudo apt install -y ansible
+
+      - name: 🧺 Run Ansible playbook
+        run: |
+          echo "$VM_IP ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_rsa" > inventory.ini
+          ansible-playbook -i inventory.ini Ansible/playbook.yml
