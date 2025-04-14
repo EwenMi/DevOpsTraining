@@ -1,0 +1,21 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+*.backup
+
+# Ansible
+*.retry
+
+# Azure Credentials
+azure_credentials.json
+.env
+*.pem
+*.key
+*.pub
+
+# Python / Flask (si besoin)
+__pycache__/
+*.pyc
+.env

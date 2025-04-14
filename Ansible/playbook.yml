@@ -1,0 +1,83 @@
+---
+- name: Configuration d'un serveur web sur Azure
+  hosts: web
+  become: yes
+
+  tasks:
+    - name: Mise à jour des paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Créer une page d'accueil
+      copy:
+        dest: /var/www/html/index.html
+        content: "<h1>Page Web Autogeneree !</h1>"
+        owner: www-data
+        group: www-data
+        
+- name: Déployer l'application Flask
+  hosts: all
+  become: yes
+  tasks:
+    - name: Installer les dépendances système
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Cloner le dépôt de l'application
+      git:
+        repo: "https://github.com/EwenMi/Training1"
+        dest: /home/azureuser/app
+        version: master
+
+    - name: Installer les dépendances Python
+      pip:
+        requirements: /home/azureuser/app/requirements.txt
+        executable: pip3
+
+    - name: Lancer l'application Flask
+      shell: |
+        nohup python3 /home/azureuser/app/app.py &
+      args:
+        executable: /bin/bash
+
+    - name: Supprimer la config Nginx par défaut
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Créer un fichier de configuration Nginx pour Flask
+      copy:
+        dest: /etc/nginx/sites-available/flask
+        content: |
+          server {
+              listen 80;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:5000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+
+    - name: Activer la configuration Nginx pour Flask
+      file:
+        src: /etc/nginx/sites-available/flask
+        dest: /etc/nginx/sites-enabled/flask
+        state: link
+        force: yes
+
+    - name: Redémarrer Nginx
+      service:
+        name: nginx
+        state: restarted
