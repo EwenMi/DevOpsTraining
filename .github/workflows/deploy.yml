@@ -39,24 +39,12 @@ jobs:
       - name: 📦 Install Ansible
         run: sudo apt update && sudo apt install -y ansible
 
-      - name: 🔑 Setup SSH with passphrase
+      - name: 🔑 Setup SSH
         run: |
-          sudo apt-get update && sudo apt-get install -y sshpass
-
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
-
-          # Lance ssh-agent
-          eval "$(ssh-agent -s)"
-
-          # Ajoute la clé via un fichier temporaire déverrouillé
-          sshpass -p "${{ secrets.SSH_KEY_PASSPHRASE }}" ssh-add ~/.ssh/id_rsa
-        env:
-          VM_IP: ${{ env.VM_IP }}
-
 
       - name: 🧺 Run Ansible playbook
         run: |
