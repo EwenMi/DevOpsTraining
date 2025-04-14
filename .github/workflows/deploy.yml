@@ -25,7 +25,7 @@ jobs:
         run: terraform -chdir=terraform init
 
       - name: 📆 Plan
-        run: terraform -chdir=terraform plan
+        run: terraform -chdir=terraform plan -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
 
       - name: 🚀 Apply
         run: terraform apply -auto-approve -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
