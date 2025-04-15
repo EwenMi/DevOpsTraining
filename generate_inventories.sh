@@ -11,7 +11,7 @@ SSH_USER="azureuser"
 # Inventory pour Bastion uniquement (accès direct)
 cat > inventory_bastion.ini <<EOF
 [bastion]
-vm-bastion ansible_host=$BASTION_IP ansible_user=$SSH_USER
+vm-bastion ansible_host=$BASTION_IP ansible_user=$SSH_USER ansible_ssh_private_key_file=~/.ssh/id_rsa_devops
 EOF
 
 # Inventory pour les autres (via bastion)
