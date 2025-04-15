@@ -48,4 +48,5 @@ jobs:
       - name: 🧺 Run Ansible playbook
         run: |
           chmod +x ./run_ansible.sh
+          chmod +x ./generate_inventories.sh
           ./run_ansible.sh
