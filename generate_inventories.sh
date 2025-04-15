@@ -19,6 +19,9 @@ cat > inventory_via_bastion.ini <<EOF
 [web]
 vm-web ansible_host=$WEB_IP ansible_user=$SSH_USER
 
+[web]
+vm-web ansible_host=$WEB_IP ansible_user=$SSH_USER
+
 [db]
 vm-db ansible_host=$DB_IP ansible_user=$SSH_USER
 
@@ -27,5 +30,5 @@ vm-monitoring ansible_host=$MONITORING_IP ansible_user=$SSH_USER
 
 [all:vars]
 ansible_ssh_private_key_file=~/.ssh/id_rsa_devops
-ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ProxyJump=$SSH_USER@$BASTION_IP'
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ProxyCommand="ssh -i ~/.ssh/id_rsa_devops -W %h:%p azureuser@$BASTION_IP"'
 EOF
