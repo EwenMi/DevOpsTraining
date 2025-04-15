@@ -1,0 +1,21 @@
+---
+- name: Installer PostgreSQL
+  apt:
+    name: postgresql
+    state: present
+    update_cache: yes
+
+- name: S'assurer que PostgreSQL est démarré et activé
+  systemd:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Copier le fichier de configuration de PostgreSQL
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/12/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: 0644
+  notify: Redémarrer PostgreSQL

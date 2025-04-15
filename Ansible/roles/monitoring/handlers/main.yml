@@ -1,0 +1,10 @@
+---
+- name: Redémarrer Prometheus
+  systemd:
+    name: prometheus
+    state: restarted
+
+- name: Redémarrer Grafana
+  systemd:
+    name: grafana-server
+    state: restarted

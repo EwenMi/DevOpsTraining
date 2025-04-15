@@ -1,0 +1,22 @@
+# Ansible/roles/web/tasks/main.yml
+
+- name: Met à jour le cache APT
+  apt:
+    update_cache: yes
+
+- name: Installe Nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Copie le fichier index.html
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    mode: '0644'
+
+- name: Assure que nginx est démarré et activé
+  service:
+    name: nginx
+    state: started
+    enabled: yes

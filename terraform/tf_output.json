@@ -1,0 +1,34 @@
+{
+  "private_ips": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "bastion": "string",
+        "db": "string",
+        "monitoring": "string",
+        "web": "string"
+      }
+    ],
+    "value": {
+      "bastion": "10.0.1.7",
+      "db": "10.0.1.6",
+      "monitoring": "10.0.1.5",
+      "web": "10.0.1.4"
+    }
+  },
+  "public_ips": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "bastion": "string",
+        "web": "string"
+      }
+    ],
+    "value": {
+      "bastion": "172.211.13.27",
+      "web": "172.211.12.70"
+    }
+  }
+}

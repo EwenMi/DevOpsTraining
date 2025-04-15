@@ -1,0 +1,47 @@
+---
+- name: Installer les paquets nécessaires
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - fail2ban
+    - ufw
+
+- name: Configurer fail2ban pour sshd
+  copy:
+    dest: /etc/fail2ban/jail.d/ssh.conf
+    content: |
+      [sshd]
+      enabled = true
+      port    = ssh
+      logpath = %(sshd_log)s
+      maxretry = 5
+
+  notify: Redémarrer fail2ban
+
+- name: Activer UFW et autoriser SSH
+  ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: Activer UFW
+  ufw:
+    state: enabled
+    policy: deny
+
+- name: Renforcer la configuration SSH (désactiver root login)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+    backup: yes
+  notify: Redémarrer ssh
+
+- name: Sassurer que fail2ban est actif
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: true

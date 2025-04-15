@@ -1,0 +1,103 @@
+---
+- name: Installer les dépendances
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - wget
+    - tar
+    - apt-transport-https
+    - software-properties-common
+    - gnupg
+
+- name: Télécharger Prometheus
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v2.50.1/prometheus-2.50.1.linux-amd64.tar.gz"
+    dest: "/tmp/prometheus.tar.gz"
+
+- name: Extraire Prometheus
+  unarchive:
+    src: "/tmp/prometheus.tar.gz"
+    dest: "/opt/"
+    remote_src: yes
+
+- name: Créer utilisateur prometheus
+  user:
+    name: prometheus
+    system: yes
+    shell: /usr/sbin/nologin
+
+- name: Créer les répertoires Prometheus
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Copier la config Prometheus
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: 0644
+
+- name: Créer le service systemd Prometheus
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=prometheus
+      ExecStart=/opt/prometheus-2.50.1.linux-amd64/prometheus \
+        --config.file=/etc/prometheus/prometheus.yml \
+        --storage.tsdb.path=/var/lib/prometheus \
+        --web.listen-address=:9090
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Démarrer Prometheus
+  systemd:
+    name: prometheus
+    enabled: true
+    state: started
+
+- name: Télécharger la clé GPG de Grafana (format ASCII)
+  ansible.builtin.get_url:
+    url: https://packages.grafana.com/gpg.key
+    dest: /tmp/grafana.gpg
+    mode: '0644'
+
+- name: Convertir la clé en format binaire (gpg --dearmor)
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /usr/share/keyrings/grafana.gpg /tmp/grafana.gpg
+  args:
+    creates: /usr/share/keyrings/grafana.gpg
+
+- name: Ajouter le dépôt Grafana (sans vérification de signature)
+  ansible.builtin.apt_repository:
+    repo: "deb [trusted=yes] https://packages.grafana.com/oss/deb stable main"
+    state: present
+    filename: grafana
+
+- name: Installer Grafana
+  apt:
+    name: grafana
+    state: present
+    update_cache: yes
+
+- name: Démarrer Grafana
+  systemd:
+    name: grafana-server
+    enabled: true
+    state: started
