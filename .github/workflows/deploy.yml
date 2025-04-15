@@ -44,6 +44,8 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_devops
           chmod 600 ~/.ssh/id_rsa_devops
           ssh-keyscan -H "$(terraform -chdir=terraform output -raw bastion_public_ip)" >> ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa_devops
 
       - name: 🧺 Run Ansible playbook
         run: |
