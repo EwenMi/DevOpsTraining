@@ -40,6 +40,21 @@
     backup: yes
   notify: Redémarrer ssh
 
+- name: Assure que les paramètres SSH sont configurés
+  become: true
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }} {{ item.value }}'
+    state: present
+    backrefs: yes
+  loop:
+    - { key: 'AllowAgentForwarding', value: 'yes' }
+    - { key: 'AllowTcpForwarding', value: 'yes' }
+    - { key: 'PermitRootLogin', value: 'no' }
+    - { key: 'PubkeyAuthentication', value: 'yes' }
+  notify: Redémarrer ssh
+
 - name: Sassurer que fail2ban est actif
   systemd:
     name: fail2ban
