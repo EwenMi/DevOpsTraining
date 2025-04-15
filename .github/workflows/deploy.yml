@@ -35,12 +35,6 @@ jobs:
 
       - name: 🚀 Apply
         run: terraform -chdir=terraform apply -auto-approve -var "ssh_public_key=~/.ssh/id_rsa.pub"
-
-      - name: 📤 Get public IP
-        id: tf_output
-        run: |
-          IP=$(terraform -chdir=terraform output -raw public_ip)
-          echo "VM_IP=$IP" >> $GITHUB_ENV
           
       - name: 📦 Install Ansible
         run: sudo apt update && sudo apt install -y ansible
